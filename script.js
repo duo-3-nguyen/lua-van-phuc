@@ -253,7 +253,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ============================================================
-  //  7. NÚT QUAY LẠI ĐẦU TRANG (BACK TO TOP)
+  //  7. HOTSPOT TƯƠNG TÁC TRÊN HÌNH KHUNG CỬI
+  //  Khi hover, focus hoặc chạm vào hotspot, hiển thị tooltip
+  //  mô tả bộ phận và công dụng của bộ phận đó.
+  // ============================================================
+
+  const loomHotspots = document.querySelectorAll('[data-hotspot-panel] .loom-hotspot');
+
+  if (loomHotspots.length > 0) {
+    const hideTimers = new WeakMap();
+
+    const closeLoomHotspots = (exceptHotspot = null) => {
+      loomHotspots.forEach((hotspot) => {
+        if (hotspot !== exceptHotspot) {
+          hotspot.classList.remove('active');
+          if (hideTimers.has(hotspot)) {
+            clearTimeout(hideTimers.get(hotspot));
+            hideTimers.delete(hotspot);
+          }
+        }
+      });
+    };
+
+    const showLoomHotspot = (hotspot) => {
+      if (hideTimers.has(hotspot)) {
+        clearTimeout(hideTimers.get(hotspot));
+        hideTimers.delete(hotspot);
+      }
+      closeLoomHotspots(hotspot);
+      hotspot.classList.add('active');
+    };
+
+    const hideLoomHotspot = (hotspot, delay = 0) => {
+      if (hideTimers.has(hotspot)) {
+        clearTimeout(hideTimers.get(hotspot));
+      }
+
+      const timer = setTimeout(() => {
+        hotspot.classList.remove('active');
+        hideTimers.delete(hotspot);
+      }, delay);
+
+      hideTimers.set(hotspot, timer);
+    };
+
+    loomHotspots.forEach((hotspot) => {
+      hotspot.addEventListener('mouseenter', () => showLoomHotspot(hotspot));
+      hotspot.addEventListener('mouseleave', () => hideLoomHotspot(hotspot));
+
+      hotspot.addEventListener('focus', () => showLoomHotspot(hotspot));
+      hotspot.addEventListener('blur', () => hideLoomHotspot(hotspot));
+
+      hotspot.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse') {
+          showLoomHotspot(hotspot);
+        }
+      });
+
+      hotspot.addEventListener('pointerup', (e) => {
+        if (e.pointerType !== 'mouse') {
+          hideLoomHotspot(hotspot, 650);
+        }
+      });
+
+      hotspot.addEventListener('pointercancel', () => hideLoomHotspot(hotspot));
+
+      hotspot.addEventListener('touchstart', () => showLoomHotspot(hotspot), { passive: true });
+      hotspot.addEventListener('touchend', () => hideLoomHotspot(hotspot, 650), { passive: true });
+
+      hotspot.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      hotspot.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          hideLoomHotspot(hotspot);
+          hotspot.blur();
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('[data-hotspot-panel]')) {
+        closeLoomHotspots();
+      }
+    });
+  }
+
+
+  // ============================================================
+  //  8. NÚT QUAY LẠI ĐẦU TRANG (BACK TO TOP)
   //  Hiển thị nút khi người dùng cuộn xuống quá 600px.
   //  Nhấn nút sẽ cuộn mượt lên đầu trang.
   // ============================================================
